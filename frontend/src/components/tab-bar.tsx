@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { TabTriggerSlotProps } from "expo-router/ui";
 import { useRouter } from "expo-router";
-import { colors, fonts, fontSize, nav, radius, shadow } from "../theme";
+import { colors, fonts, fontSize, nav, radius, shadow, spacing } from "../theme";
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   dashboard: "stats-chart",
@@ -28,7 +28,9 @@ export function FloatingTabBar({ state, descriptors, navigation }: TabBarLikePro
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const sideInset = Math.max(nav.sideInset, (width - nav.maxWidth) / 2);
+  const narrow = width < 360;
+  const sideInset = Math.max(narrow ? 10 : nav.sideInset, (width - nav.maxWidth) / 2);
+  const fabGap = narrow ? 2 : spacing.md;
 
   const items: TabItemData[] = state.routes.map((route, index) => {
     const { options } = descriptors[route.key];
@@ -55,13 +57,13 @@ export function FloatingTabBar({ state, descriptors, navigation }: TabBarLikePro
       ]}
     >
       <View style={styles.pill}>
-        <View style={styles.group}>
+        <View style={[styles.group, { paddingRight: narrow ? 2 : spacing.sm }]}>
           {left.map(({ key, ...it }) => (
             <TabItem key={key} {...it} />
           ))}
         </View>
-        <View style={{ width: nav.fabSize - 4 }} />
-        <View style={styles.group}>
+        <View style={{ width: nav.fabSize + fabGap }} />
+        <View style={[styles.group, { paddingLeft: narrow ? 2 : spacing.sm }]}>
           {right.map(({ key, ...it }) => (
             <TabItem key={key} {...it} />
           ))}
@@ -105,14 +107,17 @@ function TabItem({
     >
       <Ionicons
         name={focused ? icon : (`${icon}-outline` as keyof typeof Ionicons.glyphMap)}
-        size={focused ? 19 : 22}
-        color={focused ? colors.brandPrimary : "rgba(255,255,255,0.72)"}
+        size={20}
+        color={focused ? colors.brandPrimary : "rgba(255,255,255,0.78)"}
       />
-      {focused ? (
-        <Text style={styles.tabLabel} numberOfLines={1}>
-          {label}
-        </Text>
-      ) : null}
+      <Text
+        style={[styles.tabLabel, !focused && styles.tabLabelIdle]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -128,22 +133,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     ...shadow.float,
   },
-  group: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-evenly" },
+  group: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-evenly", gap: 2 },
   tab: {
-    minHeight: 44,
-    minWidth: 44,
-    paddingHorizontal: 6,
-    borderRadius: radius.pill,
+    minHeight: 48,
+    minWidth: 40,
+    flexShrink: 1,
+    paddingHorizontal: 3,
+    paddingVertical: 5,
+    borderRadius: radius.lg,
     alignItems: "center",
     justifyContent: "center",
-    flexDirection: "row",
-    gap: 5,
+    gap: 2,
   },
   tabActive: {
     backgroundColor: colors.surfaceSecondary,
-    paddingHorizontal: 12,
   },
-  tabLabel: { fontFamily: fonts.semibold, fontSize: fontSize.sm, color: colors.brandPrimary },
+  tabLabel: {
+    fontFamily: fonts.semibold,
+    fontSize: Math.max(10, fontSize.sm - 2),
+    color: colors.brandPrimary,
+    flexShrink: 1,
+  },
+  tabLabelIdle: { color: "rgba(255,255,255,0.82)", fontFamily: fonts.medium },
   fabWrap: {
     position: "absolute",
     pointerEvents: "box-none",

@@ -56,7 +56,7 @@ export default function LoginScreen() {
             style={{ width: logoSize, height: logoSize }}
             contentFit="contain"
             transition={300}
-            accessibilityLabel="folia"
+            accessibilityLabel="folio"
           />
           <Text style={styles.tagline}>Lembar pembukuan penjualan aglonema</Text>
         </View>

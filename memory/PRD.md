@@ -55,3 +55,10 @@ Backend 13/13 pytest (`/app/backend/tests/test_lpm_backend.py`), frontend e2e lu
 - Responsiveness: `src/theme.ts` exports `ms()` moderate scale (clamped 0.88–1.12 of a 390pt baseline) applied to spacing, fontSize and nav geometry.
 - Login bug "Invalid state parameter": `WebBrowser.openAuthSessionAsync` now uses `preferEphemeralSession: true` + `showInRecents: true`, plus a double-tap guard and error surfacing in `src/auth/index.tsx`. Needs real-device verification.
 - QA: web-preview login bypass via `localStorage lpm_session_token=qa-test-session-token` (see `memory/test_credentials.md`). Backend 13/13 and frontend flows verified (`test_reports/iteration_1.json`).
+
+## Update — Jun 2026 (lanjutan)
+- Nama app kembali ke **folio** (`app.json` name + scheme `folio`).
+- Splash & launcher icon: tile hijau dibuang, sekarang hanya glyph (daun + wordmark putih) transparan di atas background hijau `#11C87C` → tidak ada lagi sudut putih. `splash-image.png` (92% canvas), `adaptive-icon.png` (62%, safe zone), `favicon.png` pakai tile full-bleed.
+- Dashboard: kartu **Ringkasan hari ini** (testID `ringkasan-harian`) di paling atas — penjualan, keuntungan, jumlah pesanan & pohon keluar hari ini (dihitung dari `state.pesanan` + `hitungRekap`).
+- Tab bar: ikon + label bertumpuk (semua label selalu terlihat), jarak ke FAB `fabSize + 12` (narrow screen: +2, sideInset 10), label `adjustsFontSizeToFit` → tidak ada tab yang menempel ke tombol "+". Diuji 320/390/430.
+- Backend: `DataPayload` sekarang `extra="forbid"` supaya body salah bentuk (mis. `{"data": {...}}`) ditolak 422, bukan menghapus data user. 13/13 pytest lolos.

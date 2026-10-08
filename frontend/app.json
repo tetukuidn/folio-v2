@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "folia",
+    "name": "folio",
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "folia",
+    "scheme": "folio",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
@@ -14,7 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#11C87C"
       },
       "package": "com.emergent.plantsaleslogger.j5mv0z"
     },
@@ -29,9 +29,9 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-image.png",
-          "imageWidth": 200,
+          "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#FFFFFF"
+          "backgroundColor": "#11C87C"
         }
       ],
       "expo-font",

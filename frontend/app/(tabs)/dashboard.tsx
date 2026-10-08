@@ -79,6 +79,31 @@ export default function DashboardScreen() {
     return { untung, omset, transfer, pohon, hpp, margin };
   }, [filteredPesanan]);
 
+  const hariIni = useMemo(() => {
+    const now = new Date();
+    const sameDay = (iso: string) => {
+      const d = new Date(iso);
+      return (
+        d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth() &&
+        d.getDate() === now.getDate()
+      );
+    };
+    let omset = 0;
+    let untung = 0;
+    let pohon = 0;
+    let jml = 0;
+    for (const p of state.pesanan) {
+      if (!sameDay(p.tgl)) continue;
+      const r = hitungRekap(p);
+      omset += r.omset;
+      untung += r.keuntungan;
+      pohon += p.items.reduce((a, i) => a + i.jml, 0);
+      jml++;
+    }
+    return { omset, untung, pohon, jml };
+  }, [state.pesanan]);
+
   const persediaanStats = useMemo(() => {
     const list = jenisList(state);
     const fifo = stokFIFO(state);
@@ -137,6 +162,45 @@ export default function DashboardScreen() {
 
   return (
     <Screen title="Dashboard" subtitle="Ringkasan performa toko">
+      <Card style={styles.today} testID="ringkasan-harian">
+        <View style={styles.todayHead}>
+          <View style={styles.todayBadge}>
+            <Ionicons name="sunny-outline" size={16} color={colors.onBrandPrimary} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.todayTitle}>Ringkasan hari ini</Text>
+            <Text style={styles.todayDate} numberOfLines={1}>
+              {formatTgl(new Date().toISOString())}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.todayRow}>
+          <View style={styles.todayCell}>
+            <Text style={styles.todayLbl}>Penjualan</Text>
+            <Text style={styles.todayVal} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+              {formatRp(hariIni.omset)}
+            </Text>
+          </View>
+          <View style={styles.todayDivider} />
+          <View style={styles.todayCell}>
+            <Text style={styles.todayLbl}>Keuntungan</Text>
+            <Text
+              style={[styles.todayVal, hariIni.untung < 0 && { color: colors.accentMuted }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+            >
+              {formatRp(hariIni.untung)}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.todayFoot} numberOfLines={1}>
+          {hariIni.jml} pesanan · {hariIni.pohon} pohon keluar
+        </Text>
+      </Card>
+
       <ProfilCard />
 
       <Shortcut
@@ -350,6 +414,24 @@ function Row({ k, v, danger }: { k: string; v: string; danger?: boolean }) {
 }
 
 const styles = StyleSheet.create({
+  today: { backgroundColor: colors.brandPrimary, borderColor: colors.brandPrimary, gap: spacing.md },
+  todayHead: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  todayBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.pill,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  todayTitle: { fontFamily: fonts.display, fontSize: fontSize.lg + 1, color: colors.onBrandPrimary },
+  todayDate: { fontFamily: fonts.body, fontSize: fontSize.sm, color: "rgba(255,255,255,0.75)" },
+  todayRow: { flexDirection: "row", alignItems: "stretch" },
+  todayCell: { flex: 1, minWidth: 0, gap: 2 },
+  todayDivider: { width: 1, backgroundColor: "rgba(255,255,255,0.22)", marginHorizontal: spacing.md },
+  todayLbl: { fontFamily: fonts.medium, fontSize: fontSize.sm, color: "rgba(255,255,255,0.78)" },
+  todayVal: { fontFamily: fonts.display, fontSize: fontSize.xxl - 2, color: colors.onBrandPrimary },
+  todayFoot: { fontFamily: fonts.medium, fontSize: fontSize.sm, color: "rgba(255,255,255,0.78)" },
   cardTitle: { fontFamily: fonts.display, fontSize: fontSize.xl - 2, color: colors.onSurface, marginBottom: 6 },
   muted: { fontFamily: fonts.body, color: colors.muted, fontSize: fontSize.base - 1 },
   shortcut: { flexDirection: "row", alignItems: "center", gap: spacing.md },

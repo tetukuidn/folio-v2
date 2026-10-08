@@ -1,0 +1,34 @@
+{
+  "summary": "Backend + frontend regression testing for the 'folio' Expo app after the dashboard daily-summary + tab-bar spacing + app.json rename changes. Backend: 13/13 pytest tests pass sequentially; direct curl of GET /api/auth/me and GET/PUT /api/data with Bearer qa-test-session-token all return HTTP 200 and persist data. Frontend: web preview boots to login showing updated 'folio' wordmark (asset + app.json name='folio', scheme='folio'); after injecting the QA session token the Dashboard renders with testID 'ringkasan-harian' as the FIRST card (y=112 ABOVE buka-stok-barang y=465), header 'Ringkasan hari ini', today's date '8 Okt 2026', Penjualan/Keuntungan values and footer '<n> pesanan · <n> pohon keluar'. After seeding one belanja + one pesanan dated today via PUT /api/data, reloading the dashboard shows the card updating in real time: Penjualan Rp 80.000, Keuntungan Rp 50.000, '1 pesanan · 2 pohon keluar' — matches hitungRekap math (transfer 80000 − 2*hpp 15000 = 50000). The period chips (Semua/7 hari/1 bulan/3 bulan/6 bulan/Pilih tanggal) are all tappable and the lower period-filtered tiles still work. Tab-bar geometry checked programmatically at 320x568, 390x844 and 430x932 with each of the 4 tabs active: NO tab overlaps the center green '+' FAB and ALL four labels (Dashboard, Pesanan, Customer, Ekspor) remain visible on every viewport/active-tab combination. At 390x844 the gap pesanan→FAB is 19.7px and FAB→customer is 23.7px. Shortcuts buka-stok-barang and buka-supplier navigate correctly, /stok-barang still contains the seeded TEST_QA_Aglonema and search works. Logout from dashboard ('Keluar akun') redirects to /login and clears the session server-side — re-injecting the SAME token afterwards fails with 401 because logout invalidates it in Mongo (expected behavior); re-seeding user_sessions row restores it. No React Native red-screen errors, no new runtime errors in the console. Previously-flagged `useNativeDriver` web warning and `pointerEvents` deprecation warning are still present (web-preview only, no device impact).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "PUT /api/data", "issue": "Any top-level key outside the DataPayload model (e.g. accidentally sending {\"data\": {...}}) is silently ignored and the server treats the body as an EMPTY DataPayload, wiping belanja/suppliers/pesanan/sender. Returns 200 {\"ok\": true}. Add Pydantic extra='forbid' or at least reject empty bodies to prevent accidental data loss by future callers. Reference: /app/backend/data_routes.py:19 (DataPayload) and /app/backend/data_routes.py:68 (put_data)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "tab-bar.tsx FloatingTabBar wrap View", "issue": "Dev warning 'props.pointerEvents is deprecated. Use style.pointerEvents' still shown in console. The wrap View already has pointerEvents inside its style object; the warning is likely coming from another consumer (or RN-web transform). Reference: /app/frontend/src/components/tab-bar.tsx:56."},
+      {"component": "Animated / useNativeDriver", "issue": "Console warning: 'Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation.' — web-preview only, not a device bug but still noisy."}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_lpm_backend.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Harden PUT /api/data by setting Pydantic model_config = {'extra': 'forbid'} on DataPayload (or at minimum rejecting a body where belanja/suppliers/pesanan/sender are all absent) so a misshaped payload cannot silently zero out the user's data.",
+    "Investigate the remaining `props.pointerEvents is deprecated` dev warning — audit for any `<View pointerEvents=...>` prop usage outside tab-bar.tsx."
+  ],
+  "critical_code_review_comments": [
+    "dashboard.tsx line 82-105: `hariIni` iterates the FULL state.pesanan every render — fine today, but once pesanan grows this becomes O(n). Consider memoising by date key.",
+    "tab-bar.tsx `fabGap` toggles between 2px and spacing.md based on width<360. At 320x568 our overlap check still passed, but a future wider FAB (nav.fabSize) could tighten margins — keep width<360 branch tested."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "Seeded via PUT /api/data on the QA user (qa-test-session-token / user_qatest000001): 1 belanja (TEST_QA_BEL_1, TEST_QA_Aglonema, 10 pohon @ Rp 15.000, jual Rp 40.000) and 1 pesanan dated today (TEST_QA_PES_1, 2 × TEST_QA_Aglonema @ Rp 40.000, hpp 15.000, transfer 80.000, kurir JNE). Also re-seeded user_sessions row for `qa-test-session-token` (user_qatest000001, +30d expiry) after the logout regression invalidated it.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend URL env key is EXPO_PUBLIC_BACKEND_URL (frontend/.env) → https://folio-github.preview.emergentagent.com. QA bypass: localStorage.setItem('lpm_session_token','qa-test-session-token') then reload. Backend Bearer: qa-test-session-token (user_qatest000001 / qa.folia@example.com). IMPORTANT: PUT /api/data expects a FLAT body ({belanja,suppliers,pesanan,sender}), NOT {data:{...}} — wrapping in `data` silently empties the row. If a logout test invalidates the token, re-seed with: db.user_sessions.update_one({'session_token':'qa-test-session-token'}, {'$set':{'user_id':'user_qatest000001','expires_at': now+30d, 'created_at': now, 'session_token':'qa-test-session-token'}}, upsert=True). All relevant testIDs: ringkasan-harian (new daily summary card), tab-dashboard, tab-pesanan, tab-customer, tab-ekspor, fab-pesanan-baru, buka-stok-barang, buka-supplier, periode-{all|7|1m|3m|6m|range}. For pytest, run sequentially: `pytest /app/backend/tests/ -o addopts='' -v` (parallel xdist still trips the TestLogout vs TestIsolation race from iteration_1).",
+  "rca_of_issue": "N/A — no regressions found. Note: during testing I confirmed PUT /api/data silently discards unknown top-level keys because Pydantic v2 default is extra='ignore' — a `{\"data\": {...}}` payload is parsed as DataPayload() with empty default lists and overwrites the row. This is a hardening concern (listed under backend_issues.minor) rather than a current bug blocking release."
+}

@@ -17,6 +17,10 @@ async def current_user(authorization: Optional[str] = Header(default=None)) -> d
 
 
 class DataPayload(BaseModel):
+    # Reject unknown keys: a misshaped body (e.g. {"data": {...}}) used to be
+    # parsed as "all empty" and silently wipe the user's bookkeeping.
+    model_config = {"extra": "forbid"}
+
     belanja: List[Dict[str, Any]] = Field(default_factory=list)
     suppliers: List[Dict[str, Any]] = Field(default_factory=list)
     pesanan: List[Dict[str, Any]] = Field(default_factory=list)
