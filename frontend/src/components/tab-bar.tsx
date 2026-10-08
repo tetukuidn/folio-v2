@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { TabTriggerSlotProps } from "expo-router/ui";
@@ -9,7 +9,6 @@ import { colors, fonts, fontSize, nav, radius, shadow } from "../theme";
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   dashboard: "stats-chart",
   pesanan: "receipt",
-  persediaan: "leaf",
   customer: "cart",
   ekspor: "cloud-upload",
 };
@@ -28,6 +27,8 @@ type TabBarLikeProps = {
 export function FloatingTabBar({ state, descriptors, navigation }: TabBarLikeProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const sideInset = Math.max(nav.sideInset, (width - nav.maxWidth) / 2);
 
   const items: TabItemData[] = state.routes.map((route, index) => {
     const { options } = descriptors[route.key];
@@ -50,7 +51,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: TabBarLikePro
     <View
       style={[
         styles.wrap,
-        { bottom: insets.bottom + nav.bottomGap, left: nav.sideInset, right: nav.sideInset, pointerEvents: "box-none" },
+        { bottom: insets.bottom + nav.bottomGap, left: sideInset, right: sideInset, pointerEvents: "box-none" },
       ]}
     >
       <View style={styles.pill}>
@@ -74,7 +75,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: TabBarLikePro
           testID="fab-pesanan-baru"
           accessibilityLabel="Pesanan baru"
         >
-          <Ionicons name="add" size={32} color={colors.onAccent} />
+          <Ionicons name="add" size={Math.round(nav.fabSize * 0.52)} color={colors.onAction} />
         </Pressable>
       </View>
     </View>
@@ -103,7 +104,7 @@ function TabItem({
       accessibilityState={{ selected: focused }}
     >
       <Ionicons
-        name={focused ? icon : ((`${icon}-outline` as keyof typeof Ionicons.glyphMap) ?? icon)}
+        name={focused ? icon : (`${icon}-outline` as keyof typeof Ionicons.glyphMap)}
         size={focused ? 19 : 22}
         color={focused ? colors.brandPrimary : "rgba(255,255,255,0.72)"}
       />
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     width: nav.fabSize,
     height: nav.fabSize,
     borderRadius: radius.pill,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.action,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 4,

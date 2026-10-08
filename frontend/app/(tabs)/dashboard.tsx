@@ -139,20 +139,21 @@ export default function DashboardScreen() {
     <Screen title="Dashboard" subtitle="Ringkasan performa toko">
       <ProfilCard />
 
-      <Pressable onPress={() => router.push("/supplier")} testID="buka-supplier">
-        <Card style={styles.shortcut}>
-          <View style={styles.shortcutIcon}>
-            <Ionicons name="people-outline" size={22} color={colors.brandPrimary} />
-          </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.shortcutTitle}>Supplier</Text>
-            <Text style={styles.muted} numberOfLines={1}>
-              {state.suppliers.length} supplier tersimpan
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.muted} />
-        </Card>
-      </Pressable>
+      <Shortcut
+        icon="leaf-outline"
+        title="Stok barang"
+        sub={`${persediaanStats.jenisCount} jenis · ${persediaanStats.stokNow} pohon tersisa`}
+        onPress={() => router.push("/stok-barang")}
+        testID="buka-stok-barang"
+      />
+
+      <Shortcut
+        icon="people-outline"
+        title="Supplier"
+        sub={`${state.suppliers.length} supplier tersimpan`}
+        onPress={() => router.push("/supplier")}
+        testID="buka-supplier"
+      />
 
       <ScrollView
         horizontal
@@ -224,12 +225,12 @@ export default function DashboardScreen() {
       </Card>
 
       <Card>
-        <Text style={styles.cardTitle}>Persediaan (saat ini)</Text>
+        <Text style={styles.cardTitle}>Stok barang (saat ini)</Text>
         <Row k="Jenis tercatat" v={String(persediaanStats.jenisCount)} />
         <Row k="Stok awal" v={String(persediaanStats.stokAwal)} />
         <Row k="Stok masuk" v={String(persediaanStats.stokMasuk)} />
         <Row k="Stok sekarang" v={String(persediaanStats.stokNow)} />
-        <Row k="Total HPP persediaan" v={formatRp(persediaanStats.totalHpp)} />
+        <Row k="Total HPP stok barang" v={formatRp(persediaanStats.totalHpp)} />
         <Row k="Nilai stok sekarang" v={formatRp(persediaanStats.nilaiStok)} />
       </Card>
 
@@ -280,6 +281,39 @@ export default function DashboardScreen() {
 
       <Button title="Hapus semua data" kind="out" icon="trash-outline" onPress={resetSemua} testID="reset-demo" />
     </Screen>
+  );
+}
+
+function Shortcut({
+  icon,
+  title,
+  sub,
+  onPress,
+  testID,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  sub: string;
+  onPress: () => void;
+  testID?: string;
+}) {
+  return (
+    <Pressable onPress={onPress} testID={testID}>
+      <Card style={styles.shortcut}>
+        <View style={styles.shortcutIcon}>
+          <Ionicons name={icon} size={22} color={colors.brandPrimary} />
+        </View>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.shortcutTitle} numberOfLines={1}>
+            {title}
+          </Text>
+          <Text style={styles.muted} numberOfLines={1}>
+            {sub}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+      </Card>
+    </Pressable>
   );
 }
 

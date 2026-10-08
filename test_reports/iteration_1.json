@@ -1,0 +1,39 @@
+{
+  "summary": "Full backend + frontend testing for 'folia'. Backend: 13/13 pytest tests pass sequentially (auth/me, data CRUD, isolation, logout) against the public preview URL using QA token `qa-test-session-token` (user qa.folia@example.com). Frontend (web preview): login screen renders at 320x568, 390x844 and 430x932 with multicolour Google G (#4285F4/#34A853/#FBBC05/#EA4335), tagline 'Lembar pembukuan penjualan aglonema' visible, button not cut off. Bottom tab bar shows exactly 4 tabs (Dashboard/Pesanan/Customer/Ekspor), no 'Persediaan' tab, FAB is green rgb(23,192,107)=#17C06B (NOT red). All tab testIDs navigate correctly, FAB opens /pesanan-baru modal and back works, buka-stok-barang → /stok-barang with back arrow working, buka-supplier → /supplier. Added a stok row (TEST_QA_Aglonema, 7 pohon, HPP 15000) via pers-* testIDs → toast 'Stok barang ditambahkan' displayed and row persisted. Dashboard 'Stok barang (saat ini)' card renders. One visual concern: the login logo PNG itself still spells 'folio' (text baked into the image) even though the separate Text wordmark was removed — if the brand is now 'folia', the logo asset should likely be refreshed too.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "tests/test_lpm_backend.py (xdist LoadScope)", "issue": "Flaky under parallel execution: TestLogout invalidates TOKEN_2 which TestIsolation also depends on when scheduled on a different worker. Passes 13/13 sequentially. Fix suggestion: use a dedicated token for logout tests, or make TestLogout scope the whole class and re-seed before each isolation call."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "login.tsx logo asset", "issue": "Logo image at /app/frontend/assets/images/logo.png clearly displays the word 'folio' visually. Review requested 'no folio wordmark' and the app was renamed to 'folia'. The separate Text wordmark was removed (correct) but the logo PNG itself still spells 'folio'.", "testID": "login-google", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "login @ 320x568 (iPhone SE)", "issues": ["Rendering is fine — logo+tagline+Google button+assurance all fit, nothing cut off (btn bottom=390 of 568). The large leaf background photo bleeds in heavily but this is intentional."]}
+    ],
+    "react_native_issues": [
+      {"component": "tab-bar.tsx FloatingTabBar wrap View", "issue": "`pointerEvents` is passed via style prop at runtime producing a dev warning 'props.pointerEvents is deprecated. Use style.pointerEvents'. Reference: /app/frontend/src/components/tab-bar.tsx:54 — the `pointerEvents: 'box-none'` is placed inside the inline style object, which modern RN wants kept, but the warning indicates another consumer (possibly an older copy or screen wrapper) still uses the prop form. Audit for any `<View pointerEvents=...>` prop usage."},
+      {"component": "animations", "issue": "Console warning: 'Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation.' — only an issue on the web preview, not a bug on device, but worth noting."}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_lpm_backend.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Replace /app/frontend/assets/images/logo.png with a version that reads 'folia' (or icon-only) to match the renamed brand, since 'no folio wordmark' was requested.",
+    "Fix flaky backend test by giving TestLogout its own token (TOKEN_3) OR removing xdist's cross-worker race between logout + isolation.",
+    "Audit for `<View pointerEvents=...>` prop usage and migrate to `style={{ pointerEvents: ... }}` to clear the deprecation warning."
+  ],
+  "critical_code_review_comments": [
+    "dashboard.tsx line 1 comment still references 'folio' — update to 'folia'.",
+    "theme.ts line 1 comment still references 'folio' — update to 'folia'.",
+    "stok-barang.tsx uses dynamic style keys with spaces like styles['cHarga jual'] / styles['cTotal HPP']; works but non-idiomatic and brittle — consider renaming (cHargaJual, cTotalHpp)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "95%"},
+  "seed_data_creation": "No new seed data created. Used existing pre-seeded QA user (qa.folia@example.com / qa-test-session-token) and the two QA users seeded by the pytest fixture (qa.lpm@example.com, qa2.lpm@example.com). TEST_QA_Aglonema stok row added through the UI persists in the QA user's app_data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend URL comes from frontend/.env EXPO_PUBLIC_BACKEND_URL (NOT EXPO_BACKEND_URL — the review request wording differs from the actual key). QA bypass: localStorage.setItem('lpm_session_token','qa-test-session-token') then reload. For backend requests use `Authorization: Bearer qa-test-session-token`. All tab testIDs: tab-dashboard, tab-pesanan, tab-customer, tab-ekspor, fab-pesanan-baru, buka-stok-barang, buka-supplier. Stok form testIDs: pers-picker-jenis, pers-new-jenis, pers-picker-sup, pers-jml, pers-hpp, pers-jual, pers-tambah. For pytest, use `pytest -o addopts=''` to run sequentially (xdist LoadScope exposes a token race in TestLogout vs TestIsolation on parallel workers)."
+}

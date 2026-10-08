@@ -46,3 +46,12 @@ Light-only sesuai pilihan user (bg #F1F5F0, hijau #1F5A41, pink aksen #C42F5C).
 
 ## Status tes
 Backend 13/13 pytest (`/app/backend/tests/test_lpm_backend.py`), frontend e2e lulus semua (lihat `/app/test_reports/iteration_1.json`). Kredensial QA di `/app/memory/test_credentials.md`.
+
+## Update — Jun 2026: UI rework & rebrand to "folia"
+- App renamed to **folia** (`app.json` name + scheme `folia`). Icon/splash/favicon/adaptive icon regenerated from the user's logo (white frame removed, transparent rounded corners) → `assets/images/logo.png`, `icon.png`, `adaptive-icon.png`, `splash-image.png`, `favicon.png`.
+- Bottom nav: 4 tabs (Dashboard, Pesanan, Customer, Ekspor) + centered FAB "+" in brand green `#17C06B` (`colors.action`), no red. Pill width capped at 520pt for tablets.
+- "Persediaan" renamed **Stok barang**, removed from the tab bar, moved to `app/stok-barang.tsx` (stack route with back button), opened from a Dashboard shortcut card (`buka-stok-barang`).
+- Login redesigned (`app/login.tsx`): logo centered, "folio" wordmark removed, tagline under the logo, white Google button with official multicolour G (`src/components/google-icon.tsx`, react-native-svg), trust line below; centered layout, max width 480, safe-area aware.
+- Responsiveness: `src/theme.ts` exports `ms()` moderate scale (clamped 0.88–1.12 of a 390pt baseline) applied to spacing, fontSize and nav geometry.
+- Login bug "Invalid state parameter": `WebBrowser.openAuthSessionAsync` now uses `preferEphemeralSession: true` + `showInRecents: true`, plus a double-tap guard and error surfacing in `src/auth/index.tsx`. Needs real-device verification.
+- QA: web-preview login bypass via `localStorage lpm_session_token=qa-test-session-token` (see `memory/test_credentials.md`). Backend 13/13 and frontend flows verified (`test_reports/iteration_1.json`).

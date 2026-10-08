@@ -1,6 +1,17 @@
 // Design tokens for folio — lembar pembukuan penjualan aglonema. Light theme only.
 import { useMemo } from "react";
-import { Appearance, Platform, StyleSheet, useColorScheme } from "react-native";
+import { Appearance, Dimensions, Platform, StyleSheet, useColorScheme } from "react-native";
+
+// Moderate responsive scale: 390pt (iPhone 14/15) is the design baseline.
+// Clamped so small Androids stay readable and tablets don't blow up.
+const BASE_WIDTH = 390;
+const shortestSide = (() => {
+  const { width, height } = Dimensions.get("window");
+  return Math.min(width, height);
+})();
+export const sizeRatio = Math.min(Math.max(shortestSide / BASE_WIDTH, 0.88), 1.12);
+/** moderate-scale a design value for the current device width */
+export const ms = (n: number) => Math.round(n * sizeRatio);
 
 export type ColorScheme = "light" | "dark";
 
@@ -29,6 +40,10 @@ const light = {
   // Accent (pink)
   accent: "#C42F5C",
   onAccent: "#FFFFFF",
+
+  // Action / FAB (hijau terang dari logo)
+  action: "#17C06B",
+  onAction: "#FFFFFF",
   accentMuted: "#FBE6EC",
   onAccentMuted: "#C42F5C",
 
@@ -60,7 +75,7 @@ setColorScheme?.(themes.dark ? null : defaultScheme);
 
 export function useTheme(): { scheme: ColorScheme; colors: ThemeColors } {
   const system = useColorScheme();
-  const scheme: ColorScheme = system && themes[system] ? system : defaultScheme;
+  const scheme: ColorScheme = system === "dark" && themes.dark ? "dark" : defaultScheme;
   return { scheme, colors: themes[scheme] ?? themes.light };
 }
 
@@ -75,7 +90,15 @@ export function makeStyles<T extends StyleSheet.NamedStyles<T> | StyleSheet.Name
 
 export const colors = light;
 
-export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 };
+export const spacing = {
+  xs: ms(4),
+  sm: ms(8),
+  md: ms(12),
+  lg: ms(16),
+  xl: ms(24),
+  xxl: ms(32),
+  xxxl: ms(48),
+};
 export const radius = { sm: 6, md: 12, lg: 20, xl: 28, pill: 999 };
 
 // Soft sage gradient used as the app background
@@ -91,7 +114,15 @@ export const fonts = {
   bold: "PlusJakartaSans-Bold",
 };
 
-export const fontSize = { sm: 12, base: 14, lg: 16, xl: 20, xxl: 24, xxxl: 32, display: 44 };
+export const fontSize = {
+  sm: ms(12),
+  base: ms(14),
+  lg: ms(16),
+  xl: ms(20),
+  xxl: ms(24),
+  xxxl: ms(32),
+  display: ms(44),
+};
 
 export const shadow = {
   card: Platform.select({
@@ -108,10 +139,11 @@ export const shadow = {
 
 // Floating pill navigation geometry
 export const nav = {
-  barHeight: 64,
-  sideInset: 16,
-  bottomGap: 10,
-  fabSize: 60,
-  fabLift: 22, // how much the FAB rises above the pill's top edge
-  contentBottomPad: 132,
+  barHeight: Math.max(60, ms(64)),
+  sideInset: ms(16),
+  bottomGap: ms(10),
+  fabSize: Math.max(56, ms(60)),
+  fabLift: ms(22), // how much the FAB rises above the pill's top edge
+  contentBottomPad: Math.max(124, ms(132)),
+  maxWidth: 520, // keep the pill thumb-reachable on tablets
 };

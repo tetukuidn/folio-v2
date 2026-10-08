@@ -124,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [exchange]);
 
   const signIn = useCallback(async () => {
+    if (signingIn) return;
     setError(null);
     setSigningIn(true);
     try {
@@ -134,11 +135,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       hotUrl.current = null;
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirect);
+      // Ephemeral session => fresh cookie jar per attempt, so a stale OAuth
+      // "state" cookie from an earlier/aborted login can't break this one.
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirect, {
+        preferEphemeralSession: true,
+        showInRecents: true,
+      });
       const fromResult = (result as any)?.url as string | undefined;
       let sid = extractSessionId(fromResult) || extractSessionId(hotUrl.current);
       if (!sid) sid = extractSessionId(await Linking.getInitialURL());
       if (!sid) {
+        const err = (fromResult || "").match(/error_description=([^&#]+)/);
+        if (err) setError("Login gagal, coba lagi");
         setSigningIn(false);
         return;
       }
@@ -148,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setSigningIn(false);
     }
-  }, [exchange]);
+  }, [exchange, signingIn]);
 
   const signOut = useCallback(async () => {
     try {

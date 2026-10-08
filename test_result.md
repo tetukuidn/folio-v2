@@ -101,3 +101,53 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+## Iteration: UI rework (menu 5 slot, stok barang, login redesign, rebrand folia) — 2026-06
+
+backend:
+  - task: "Auth session endpoints (/api/auth/session, /me, /logout)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/auth.py"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Unchanged this iteration. QA session seeded in Mongo: token qa-test-session-token (user qa.folia@example.com)."
+
+frontend:
+  - task: "Bottom nav: 4 tabs (Dashboard, Pesanan, Customer, Ekspor) + centered green + FAB"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/tab-bar.tsx, /app/frontend/app/(tabs)/_layout.tsx"
+    needs_retesting: true
+  - task: "Persediaan renamed to 'Stok barang', moved out of tabs to /stok-barang, opened from dashboard shortcut"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/stok-barang.tsx, /app/frontend/app/(tabs)/dashboard.tsx"
+    needs_retesting: true
+  - task: "Login redesign: new transparent logo, no 'folio' wordmark, tagline under logo, official Google G button"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/login.tsx, /app/frontend/src/components/google-icon.tsx"
+    needs_retesting: true
+  - task: "Google sign-in 'Invalid state parameter' fix (ephemeral web auth session + double-tap guard)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/auth/index.tsx"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Cannot be verified in preview; requires real device + Google account."
+  - task: "Responsive sizing (moderate scale in theme.ts) across phone sizes"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/theme.ts"
+    needs_retesting: true
+
+metadata:
+  run: "ui-rework-1"
+
+agent_communication:
+  - agent: "main"
+    message: "Use localStorage lpm_session_token=qa-test-session-token to bypass Google login on web preview. Please verify all 4 tabs render, FAB opens pesanan-baru modal, dashboard shortcuts open /stok-barang and /supplier, stok barang add/search/delete works, and layout at 320x568 / 390x844 / 430x932."

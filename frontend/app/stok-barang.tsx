@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { Screen } from "@/src/components/screen";
 import { Button, Card, Field, Input, Picker } from "@/src/components/ui";
 import { useToast } from "@/src/components/toast";
@@ -16,6 +17,7 @@ const KOSONG = "__KOSONG__";
 export default function PersediaanScreen() {
   const { state, setState } = useStore();
   const toast = useToast();
+  const router = useRouter();
   const [jenis, setJenis] = useState<string>("");
   const [newJenis, setNewJenis] = useState("");
   const [sup, setSup] = useState<string>("");
@@ -70,7 +72,7 @@ export default function PersediaanScreen() {
         jual: jl,
       };
       setState((s) => ({ ...s, belanja: [b, ...s.belanja] }));
-      toast.show("Persediaan ditambahkan");
+      toast.show("Stok barang ditambahkan");
     }
     setJml("");
     setHpp("");
@@ -109,9 +111,14 @@ export default function PersediaanScreen() {
   };
 
   return (
-    <Screen title="Persediaan" subtitle="Catatan stok masuk & nilai HPP">
+    <Screen
+      title="Stok barang"
+      subtitle="Catatan stok masuk & nilai HPP"
+      onBack={() => router.back()}
+      floatingNav={false}
+    >
       <Card>
-        <Text style={styles.cardTitle}>Tambah persediaan</Text>
+        <Text style={styles.cardTitle}>Tambah stok barang</Text>
         <View style={{ height: spacing.sm }} />
         <Field label="Tanggal">
           <Input value={new Date().toLocaleDateString("id-ID")} editable={false} />
@@ -157,13 +164,13 @@ export default function PersediaanScreen() {
           </Text>
         )}
         <View style={{ height: spacing.md }} />
-        <Button title="Tambah persediaan" icon="add-outline" onPress={simpan} testID="pers-tambah" />
+        <Button title="Tambah stok barang" icon="add-outline" onPress={simpan} testID="pers-tambah" />
       </Card>
 
       <Input placeholder="Cari jenis atau supplier" value={search} onChangeText={setSearch} />
 
       <Card>
-        <Text style={styles.cardTitle}>Data persediaan</Text>
+        <Text style={styles.cardTitle}>Data stok barang</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator>
           <View>
             <View style={[styles.tr, styles.thead]}>
